@@ -1,0 +1,148 @@
+package org.matsim.project;
+
+import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.contrib.drt.optimizer.insertion.DrtInsertionSearchParams;
+import org.matsim.contrib.drt.optimizer.insertion.ExtensiveInsertionSearchParams;
+import org.matsim.contrib.drt.routing.DrtRoute;
+import org.matsim.contrib.drt.routing.DrtRouteFactory;
+import org.matsim.contrib.drt.run.*;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
+import org.matsim.contrib.dvrp.run.DvrpModule;
+import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
+import org.matsim.contrib.otfvis.OTFVisLiveModule;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
+import org.matsim.core.config.groups.QSimConfigGroup;
+import org.matsim.core.config.groups.StrategyConfigGroup;
+import org.matsim.core.config.groups.QSimConfigGroup.SnapshotStyle;
+import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
+import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
+import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultSelector;
+import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule.DefaultStrategy;
+import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vis.otfvis.OTFVisConfigGroup;
+
+public class RunDRTRebalancing{
+    // todo:
+    // * have at least one drt use case in the "examples" project, so it can be addressed via ExamplesUtils
+    // * remove the DrtRoute.class thing; use Attributable instead (Route will have to be made implement Attributable).  If impossible, move the DrtRoute
+    // class thing to the core.
+    // * move consistency checkers into the corresponding config groups.
+    // * make MultiModeDrt and normal DRT the same.  Make config accordingly so that 1-mode drt is just multi-mode with one entry.
+
+
+    /*private static final Logger log = Logger.getLogger( RunDrtRebalancing.class ) ;
+
+    private static final String DRT_A = "drt_A";
+    private static final String DRT_B = "drt_B";
+    private static final String DRT_C = "drt_C";*/
+
+    public static void main( String[] args ){
+
+        Config config;
+
+        if ( args!=null && args.length>=1 ) {
+            config = ConfigUtils.loadConfig( args );
+        } else {
+            config = ConfigUtils.loadConfig( "scenarios/drt-rebalancing-test/test.with-drt.config.xml" );
+//            config.controler().setOutputDirectory("output/RunDrtExample/multi_mode_one_shared_taxi");
+        }
+        config.controler().setOverwriteFileSetting( OverwriteFileSetting.deleteDirectoryIfExists );
+
+//        config.controler().setLastIteration( 1 );
+
+//        config.qsim().setSimStarttimeInterpretation( QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime );
+        config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles(true);
+//        config.qsim().setSnapshotStyle(SnapshotStyle.queue);
+
+        //adjust config
+        MultiModeDrtConfigGroup multiModeDrtConfig = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
+        ConfigUtils.addOrGetModule(config, DvrpConfigGroup.class);
+        DrtConfigs.adjustMultiModeDrtConfig(multiModeDrtConfig, config.planCalcScore(), config.plansCalcRoute());
+
+//        @SuppressWarnings("unused")
+        //get DvrpConfigGroup
+//        DvrpConfigGroup dvrpConfig = ConfigUtils.addOrGetModule( config, DvrpConfigGroup.class );
+//
+        //get MultiModeDrtConfigGroup
+//        MultiModeDrtConfigGroup multiModeDrtCfg = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
+//        {
+//            DrtConfigGroup drtConfig = new DrtConfigGroup();
+//            drtConfig.setMode( DRT_A ).setStopDuration(60.).setMaxWaitTime(900.).setMaxTravelTimeAlpha(1.3).setMaxTravelTimeBeta(10. * 60.);
+//            drtConfig.setRejectRequestIfMaxWaitOrTravelTimeViolated( false );
+//            drtConfig.setVehiclesFile("one_shared_taxi_vehicles_A.xml");
+//            drtConfig.setChangeStartLinkToLastLinkInSchedule(true);
+//            drtConfig.addParameterSet( new ExtensiveInsertionSearchParams() );
+//            multiModeDrtCfg.addDrtConfig(drtConfig);
+//        }
+//        {
+//            DrtConfigGroup drtConfig = new DrtConfigGroup();
+//            drtConfig.setMode( DRT_B ).setStopDuration(60.).setMaxWaitTime(900.).setMaxTravelTimeAlpha(1.3).setMaxTravelTimeBeta(10. * 60.);
+//            drtConfig.setRejectRequestIfMaxWaitOrTravelTimeViolated( false );
+//            drtConfig.setVehiclesFile("one_shared_taxi_vehicles_B.xml");
+//            drtConfig.setChangeStartLinkToLastLinkInSchedule(true);
+//            drtConfig.addParameterSet( new ExtensiveInsertionSearchParams() );
+//            multiModeDrtCfg.addDrtConfig(drtConfig);
+//        }
+//        {
+//            DrtConfigGroup drtConfig = new DrtConfigGroup();
+//            drtConfig.setMode( DRT_C ).setStopDuration(60.).setMaxWaitTime(900.).setMaxTravelTimeAlpha(1.3).setMaxTravelTimeBeta(10. * 60.);
+//            drtConfig.setRejectRequestIfMaxWaitOrTravelTimeViolated( false );
+//            drtConfig.setVehiclesFile("one_shared_taxi_vehicles_C.xml");
+//            drtConfig.setChangeStartLinkToLastLinkInSchedule(true);
+//            drtConfig.addParameterSet( new ExtensiveInsertionSearchParams() );
+//            multiModeDrtCfg.addDrtConfig(drtConfig);
+//        }
+//
+//        for (DrtConfigGroup drtCfg : multiModeDrtCfg.getModalElements()) {
+//            DrtConfigs.adjustDrtConfig(drtCfg, config.planCalcScore(), config.plansCalcRoute());
+//        }
+//        {
+//            // clear strategy settings from config file:
+//            config.strategy().clearStrategySettings();
+//
+//            // configure mode choice so that travellers start using drt:
+//            config.strategy().addStrategySettings( new StrategySettings().setStrategyName( DefaultStrategy.ChangeSingleTripMode ).setWeight( 0.1 ) );
+//            config.changeMode().setModes( new String[]{TransportMode.car, DRT_A, DRT_B, DRT_C} );
+//
+//            // have a "normal" plans choice strategy:
+//            config.strategy().addStrategySettings( new StrategySettings().setStrategyName( DefaultSelector.ChangeExpBeta ).setWeight( 1. ) );
+//        }
+//        {
+//            // add params so that scoring works:
+//            config.planCalcScore().addModeParams( new ModeParams( DRT_A ) );
+//            config.planCalcScore().addModeParams( new ModeParams( DRT_B ) );
+//            config.planCalcScore().addModeParams( new ModeParams( DRT_C ) );
+//        }
+
+        Scenario scenario = ScenarioUtils.createScenario( config ) ;
+        scenario.getPopulation().getFactory().getRouteFactories().setRouteFactory( DrtRoute.class, new DrtRouteFactory() );
+        ScenarioUtils.loadScenario( scenario );
+        // yyyy in long run, try to get rid of the route factory thing
+
+        Controler controler = new Controler( scenario ) ;
+
+
+        controler.addOverridingModule( new DvrpModule() ) ;
+        controler.addOverridingModule( new MultiModeDrtModule( ) ) ;
+        controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(multiModeDrtConfig));
+
+        /*controler.configureQSimComponents( DvrpQSimComponents.activateModes( DRT_A, DRT_B, DRT_C ) ) ;
+        // yyyy in long run, try to get rid of the above line
+
+        OTFVisConfigGroup otfVisConfigGroup = ConfigUtils.addOrGetModule( config, OTFVisConfigGroup.class );
+        otfVisConfigGroup.setLinkWidth( 5 );
+        otfVisConfigGroup.setDrawNonMovingItems( true );
+//		controler.addOverridingModule( new OTFVisLiveModule() );*/
+
+        controler.run() ;
+    }
+
+}
