@@ -5,9 +5,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.api.core.v01.events.ActivityEndEvent;
 import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
+import org.matsim.contrib.drt.util.DrtEventsReaders;
 import org.matsim.contrib.dvrp.vrpagent.TaskStartedEvent;
 import org.matsim.contrib.dvrp.vrpagent.TaskStartedEventHandler;
 import org.matsim.core.events.EventsUtils;
+import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.testcases.MatsimTestUtils;
 import scala.Int;
 
@@ -40,16 +42,20 @@ public class RunDRTRebalancingTest {
                 var handler = new RebalancingAnalysis();
                 manager.addHandler(handler);
 
-                EventsUtils.readEvents(manager, utils.getOutputDirectory() + "/output_events.xml.gz");
+                MatsimEventsReader eventsReader = DrtEventsReaders.createEventsReader(manager);
+                eventsReader.readFile(utils.getOutputDirectory() + "/output_events.xml.gz");
+                //EventsUtils.readEvents(manager, utils.getOutputDirectory() + "/output_events.xml.gz");
 
                 Integer relocations = handler.getRelocationCounter();
-                List<String> events = handler.getEventList();
+                //List<String> events = handler.getEventList();
 
-                for (String s : events) {
+                //System.out.println(relocations);
+
+                /*for (String s : events) {
                     System.out.println(s);
-                }
+                }*/
 
-                Assert.assertTrue(6 == 6);
+                Assert.assertTrue(relocations == 6);
             }
 
         } catch ( Exception ee){Assert.fail();}
@@ -67,19 +73,19 @@ public class RunDRTRebalancingTest {
 class RebalancingAnalysis implements TaskStartedEventHandler {
 
     private Integer relocationCounter = 0;
-    private List<String> eventList = new ArrayList<String>();
+    //private List<String> eventList = new ArrayList<String>();
 
     //getter method
     public Integer getRelocationCounter(){return relocationCounter;}
-    public List<String> getEventList(){return eventList;}
+    //public List<String> getEventList(){return eventList;}
 
     //override handler
     @Override
     public void handleEvent(TaskStartedEvent event){
-        /*if(event.getTaskType().toString().equals("RELOCATE") & event.getTime() == 3600.0){
+        if(event.getTaskType().name().equals("RELOCATE") && event.getTime()==3600.0){
             relocationCounter += 1;
-        }*/
-        eventList.add(event.getEventType());
+        }
+        //eventList.add(event.getTaskType().toString());
     }
 
 }
