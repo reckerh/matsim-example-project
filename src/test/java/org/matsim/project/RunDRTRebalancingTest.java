@@ -44,16 +44,8 @@ public class RunDRTRebalancingTest {
 
                 MatsimEventsReader eventsReader = DrtEventsReaders.createEventsReader(manager);
                 eventsReader.readFile(utils.getOutputDirectory() + "/output_events.xml.gz");
-                //EventsUtils.readEvents(manager, utils.getOutputDirectory() + "/output_events.xml.gz");
 
                 Integer relocations = handler.getRelocationCounter();
-                //List<String> events = handler.getEventList();
-
-                //System.out.println(relocations);
-
-                /*for (String s : events) {
-                    System.out.println(s);
-                }*/
 
                 Assert.assertTrue(relocations == 6);
             }
@@ -73,11 +65,9 @@ public class RunDRTRebalancingTest {
 class RebalancingAnalysis implements TaskStartedEventHandler {
 
     private Integer relocationCounter = 0;
-    //private List<String> eventList = new ArrayList<String>();
 
     //getter method
     public Integer getRelocationCounter(){return relocationCounter;}
-    //public List<String> getEventList(){return eventList;}
 
     //override handler
     @Override
@@ -85,7 +75,6 @@ class RebalancingAnalysis implements TaskStartedEventHandler {
         if(event.getTaskType().name().equals("RELOCATE") && event.getTime()==3600.0){
             relocationCounter += 1;
         }
-        //eventList.add(event.getTaskType().toString());
     }
 
 }
