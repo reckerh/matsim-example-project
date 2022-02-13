@@ -47,21 +47,13 @@ public class RunDRTRebalancing{
         config.controler().setOverwriteFileSetting( OverwriteFileSetting.deleteDirectoryIfExists );
 
 
-        //perhaps deactivate again?
-        config.qsim().setSimStarttimeInterpretation( QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime );
-        //edit qsim  - taken over from examples; deactivated based on Kelheim scenario??
-        config.qsim().setInsertingWaitingVehiclesBeforeDrivingVehicles(true);
-        //perhaps deactivate again?
-        config.qsim().setSnapshotStyle(SnapshotStyle.queue);
-
-
         //add / adjust MultiModeDrt config and Dvrp Config
         MultiModeDrtConfigGroup multiModeDrtConfig = ConfigUtils.addOrGetModule(config, MultiModeDrtConfigGroup.class);
         ConfigUtils.addOrGetModule(config, DvrpConfigGroup.class);
         DrtConfigs.adjustMultiModeDrtConfig(multiModeDrtConfig, config.planCalcScore(), config.plansCalcRoute());
 
 
-        // create scenario, set route factory to Drt factroy, load the scenario
+        // create scenario, set route factory to Drt factory, load the scenario
         Scenario scenario = ScenarioUtils.createScenario( config ) ;
         scenario.getPopulation().getFactory().getRouteFactories().setRouteFactory( DrtRoute.class, new DrtRouteFactory() );
         ScenarioUtils.loadScenario( scenario );
@@ -71,7 +63,7 @@ public class RunDRTRebalancing{
         Controler controler = new Controler( scenario ) ;
 
 
-        //add Drvrp and MultiModeDrtModules to controler; sth sth configure qsim
+        //add Drvrp and MultiModeDrtModules to controler; activate DRT mode in QSim
         controler.addOverridingModule( new DvrpModule() ) ;
         controler.addOverridingModule( new MultiModeDrtModule( ) ) ;
         controler.configureQSimComponents(DvrpQSimComponents.activateAllModes(multiModeDrtConfig));
