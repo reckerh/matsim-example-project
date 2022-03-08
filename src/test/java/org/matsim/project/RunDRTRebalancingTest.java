@@ -64,12 +64,13 @@ public class RunDRTRebalancingTest {
 
 class RebalancingAnalysis implements TaskStartedEventHandler {
 
+    //create counter Integer
     private Integer relocationCounter = 0;
 
     //getter method
     public Integer getRelocationCounter(){return relocationCounter;}
 
-    //override handler
+    //override empty handler
     @Override
     public void handleEvent(TaskStartedEvent event){
         if(event.getTaskType().name().equals("RELOCATE") && event.getTime()==3600.0){
